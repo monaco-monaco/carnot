@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <title>Thermodynamic Engine</title>
+
+
+
+  <script type="importmap">
+
+  {
+
+    "imports": {
+
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161/build/three.module.js",
+
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161/examples/jsm/"
+
+    }
+
+  }
+
+  </script>
+
+
+
+  <style>
+
+    body { margin: 0; overflow: hidden; background-color: #111; }
+
+    
+
+    .ui-panel {
+
+      position: absolute;
+
+      background: rgba(0,0,0,0.8);
+
+      padding: 15px;
+
+      border-radius: 8px;
+
+      color: white;
+
+      font-family: sans-serif;
+
+      z-index: 10;
+
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+    }
+
+
+
+    .ui-controls { top: 10px; left: 10px; }
+
+    .ui-graph { top: 10px; right: 10px; text-align: center; }
+
+
+
+    .slider-row { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; width: 220px; }
+
+    .slider-row input { width: 120px; margin: 0 10px; }
+
+    .val-badge { background: #333; padding: 2px 6px; border-radius: 4px; font-size: 12px; min-width: 30px; text-align: right; }
+
+
+
+    canvas { background: white; cursor: crosshair; border-radius: 4px; margin-top: 10px; }
+
+    select, button { padding: 5px; border-radius: 4px; border: none; font-family: sans-serif; }
+
+    button { cursor: pointer; font-weight: bold; }
+
+    button:hover { filter: brightness(1.1); }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+
+<div class="ui-panel ui-controls">
+
+  <h3 style="margin-top: 0; font-size: 16px; border-bottom: 1px solid #444; padding-bottom: 5px;">Параметры газа</h3>
+
+  <div class="slider-row">
+
+    N: <input id="nSlider" type="range" min="5" max="100" value="30"> <span class="val-badge" id="nVal">30</span>
+
+  </div>
+
+  <div class="slider-row">
+
+    T: <input id="tSlider" type="range" min="1" max="15" step="0.1" value="3"> <span class="val-badge" id="tVal">3.0</span>
+
+  </div>
+
+  <div class="slider-row">
+
+    V: <input id="vSlider" type="range" min="2" max="8" step="0.1" value="2"> <span class="val-badge" id="vVal">2.0</span>
+
+  </div>
+
+  <div class="slider-row" style="margin-bottom: 0;">
+
+    P: <input id="pSlider" type="range" min="5" max="150" step="1" value="45"> <span class="val-badge" id="pVal">45</span>
+
+  </div>
+
+  <div class="slider-row" style="margin-top: 10px;">
+
+    Скорость: <input id="speedSlider" type="range" min="1" max="10" value="5">
+
+  </div>
+
+
+
+</div>
+
+
+
+<div class="ui-panel ui-graph">
+
+  <select id="modeSelect" style="width: 100%; margin-bottom: 5px;">
+
+    <option value="free">Свободный график</option>
+
+    <option value="carnot">Цикл Карно</option>
+
+    <option value="diesel">Цикл Дизеля</option>
+
+    <option value="otto">Цикл Отто</option>
+
+  </select>
+
+  
+
+  <canvas id="pvCanvas" width="260" height="220"></canvas>
+
+  
+
+  <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+
+    <button id="clearBtn" style="background: #555; color: white; width: 48%;">Сброс</button>
+
+    <button id="playBtn" style="background: #44aaff; color: white; width: 48%;">Запуск</button>
+
+  </div>
+
+</div>
+
+
+
+<script type="module" src="main.js"></script>
+
+
+
+</body>
+
+</html>
