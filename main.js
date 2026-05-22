@@ -6,15 +6,9 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const scene = new THREE.Scene();
 
-
-
-// --- НОВЫЙ ФОН: Спокойный темно-серый вместо черной пустоты ---
-
 scene.background = new THREE.Color(0x202225);
 
 
-
-// ---------------- CAMERA & RENDERER ----------------
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -32,8 +26,6 @@ document.body.appendChild(renderer.domElement);
 
 
 
-// --- НОВЫЙ СВЕТ: Делает металл объемным ---
-
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -42,11 +34,9 @@ dirLight.position.set(10, 15, 10);
 
 scene.add(dirLight);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)); // Дополнительный заполняющий свет
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.6));
 
 
-
-// ---------------- UI ELEMENTS ----------------
 
 const vSlider = document.getElementById("vSlider"), vVal = document.getElementById("vVal");
 
@@ -82,61 +72,55 @@ let piston = null, rod = null, crankshaft = null;
 
 loader.load("models/engine.glb", (gltf) => {
 
- scene.add(gltf.scene);
+  scene.add(gltf.scene);
 
 
 
- // --- НОВЫЙ МАТЕРИАЛ: Металлический шейдер для поршня ---
+  gltf.scene.traverse((child) => {
 
- gltf.scene.traverse((child) => {
+    if (child.isMesh) {
 
-   if (child.isMesh) {
+      child.material = new THREE.MeshPhysicalMaterial({
 
-     child.material = new THREE.MeshPhysicalMaterial({
+        color: 0xbbbbbb,
 
-       color: 0xa0a0a0,       // Базовый цвет металла
+        metalness: 0.8,
 
-       metalness: 0.8,        // Металлический блеск
+        roughness: 0.3,
 
-       roughness: 0.3,        // Легкая шероховатость
+        clearcoat: 0.5
 
-       clearcoat: 0.5         // Дополнительный слой отражения
+      });
 
-     });
+    }
 
-   }
-
- });
+  });
 
 
 
- piston = gltf.scene.getObjectByName("piston");
+  piston = gltf.scene.getObjectByName("piston");
 
- rod = gltf.scene.getObjectByName("rod");
+  rod = gltf.scene.getObjectByName("rod");
 
- crankshaft = gltf.scene.getObjectByName("crankshaft");
-
-
-
- // --- НОВАЯ СЕТКА: Задает масштаб лаборатории ---
-
- const grid = new THREE.GridHelper(30, 30, 0x555555, 0x333333);
-
- grid.position.y = -4; 
-
- scene.add(grid);
+  crankshaft = gltf.scene.getObjectByName("crankshaft");
 
 
 
- updateMechanism();
+  const grid = new THREE.GridHelper(30, 30, 0x555555, 0x333333);
+
+  grid.position.y = -4; 
+
+  scene.add(grid);
+
+
+
+  updateMechanism();
 
 });
 
 
 
 let particles = [];
-
-// --- НОВЫЙ ГАЗ: Увеличенные, белые и полупрозрачные шарики ---
 
 const geo = new THREE.SphereGeometry(0.15, 16, 16); 
 
@@ -154,27 +138,27 @@ const mat = new THREE.MeshBasicMaterial({
 
 function rebuildParticles() {
 
- const diff = n - particles.length;
+  const diff = n - particles.length;
 
- if (diff > 0) {
+  if (diff > 0) {
 
-   for (let i = 0; i < diff; i++) {
+    for (let i = 0; i < diff; i++) {
 
-     const p = new THREE.Mesh(geo, mat);
+      const p = new THREE.Mesh(geo, mat);
 
-     p.position.set((Math.random() - 0.5) * 1.2, 8, (Math.random() - 0.5) * 1.2);
+      p.position.set((Math.random() - 0.5) * 1.2, 8, (Math.random() - 0.5) * 1.2);
 
-     p.userData.v = new THREE.Vector3((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01);
+      p.userData.v = new THREE.Vector3((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01);
 
-     particles.push(p); scene.add(p);
+      particles.push(p); scene.add(p);
 
-   }
+    }
 
- } else if (diff < 0) {
+  } else if (diff < 0) {
 
-   for (let i = 0; i < -diff; i++) scene.remove(particles.pop());
+    for (let i = 0; i < -diff; i++) scene.remove(particles.pop());
 
- }
+  }
 
 }
 
@@ -184,33 +168,33 @@ rebuildParticles();
 
 function updateMechanism() {
 
- if (!piston || !rod || !crankshaft) return;
+  if (!piston || !rod || !crankshaft) return;
 
- const pistonY = TOP_Y - V;
+  const pistonY = TOP_Y - V;
 
- piston.position.y = pistonY;
-
-
-
- const H = pistonY - crankCenterY;
-
- let cosTheta = (crankRadius * crankRadius + H * H - 64) / (2 * crankRadius * H);
-
- cosTheta = Math.max(-1, Math.min(1, cosTheta));
-
- const angle = Math.acos(cosTheta);
+  piston.position.y = pistonY;
 
 
 
- crankshaft.rotation.x = angle;
+  const H = pistonY - crankCenterY;
 
- const crankPin = new THREE.Vector3(0, crankCenterY + Math.cos(angle) * crankRadius, Math.sin(angle) * crankRadius);
+  let cosTheta = (crankRadius * crankRadius + H * H - 64) / (2 * crankRadius * H);
 
- rod.position.copy(crankPin);
+  cosTheta = Math.max(-1, Math.min(1, cosTheta));
 
- const dir = new THREE.Vector3().subVectors(piston.position, crankPin);
+  const angle = Math.acos(cosTheta);
 
- rod.rotation.x = Math.atan2(dir.z, dir.y);
+
+
+  crankshaft.rotation.x = angle;
+
+  const crankPin = new THREE.Vector3(0, crankCenterY + Math.cos(angle) * crankRadius, Math.sin(angle) * crankRadius);
+
+  rod.position.copy(crankPin);
+
+  const dir = new THREE.Vector3().subVectors(piston.position, crankPin);
+
+  rod.rotation.x = Math.atan2(dir.z, dir.y);
 
 }
 
@@ -218,11 +202,11 @@ function updateMechanism() {
 
 function updateUI() {
 
- nVal.innerText = n;
+  nVal.innerText = n;
 
- tVal.innerText = T.toFixed(1);
+  tVal.innerText = T.toFixed(1);
 
- vVal.innerText = V.toFixed(1);
+  vVal.innerText = V.toFixed(1);
 
 }
 
@@ -237,8 +221,6 @@ tSlider.oninput = () => { if (!isPlaying) { T = +tSlider.value; updateUI(); } };
 pSlider.oninput = () => { if (isPlaying) return; T = (+pSlider.value * V) / n; tSlider.value = T; updateUI(); };
 
 
-
-// ---------------- CANVAS GRAPH & CYCLES ----------------
 
 const canvas = document.getElementById("pvCanvas");
 
@@ -280,7 +262,7 @@ let draggedPoint = null;
 
 function toPixels(v, p) {
 
- return { x: PAD_L + ((v - V_MIN) / (V_MAX - V_MIN)) * W, y: PAD_T + (1 - (p - P_MIN) / (P_MAX - P_MIN)) * H };
+  return { x: PAD_L + ((v - V_MIN) / (V_MAX - V_MIN)) * W, y: PAD_T + (1 - (p - P_MIN) / (P_MAX - P_MIN)) * H };
 
 }
 
@@ -288,7 +270,7 @@ function toPixels(v, p) {
 
 function fromPixels(x, y) {
 
- return { v: V_MIN + ((x - PAD_L) / W) * (V_MAX - V_MIN), p: P_MIN + (1 - (y - PAD_T) / H) * (P_MAX - P_MIN) };
+  return { v: V_MIN + ((x - PAD_L) / W) * (V_MAX - V_MIN), p: P_MIN + (1 - (y - PAD_T) / H) * (P_MAX - P_MIN) };
 
 }
 
@@ -296,57 +278,57 @@ function fromPixels(x, y) {
 
 function drawGrid() {
 
- ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 
 
- ctx.font = "bold 13px sans-serif";
+  ctx.font = "bold 13px sans-serif";
 
- ctx.fillStyle = "#222";
+  ctx.fillStyle = "#222";
 
- ctx.fillText("P", 8, 30);
+  ctx.fillText("P", 8, 30);
 
- ctx.fillText("V", canvas.width - 40, canvas.height - 7);
-
-
-
- ctx.font = "10px sans-serif";
-
- ctx.fillStyle = "#666";
+  ctx.fillText("V", canvas.width - 40, canvas.height - 7);
 
 
 
- for (let i = 0; i <= 4; i++) {
+  ctx.font = "10px sans-serif";
 
-   const x = PAD_L + (i / 4) * W;
-
-   ctx.strokeStyle = "#eee"; ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, canvas.height - PAD_B); ctx.stroke();
-
-   ctx.fillText((V_MIN + (i / 4) * (V_MAX - V_MIN)).toFixed(1), x - 8, canvas.height - 10);
-
- }
-
- for (let i = 0; i <= 5; i++) {
-
-   const y = PAD_T + H - (i / 5) * H;
-
-   ctx.strokeStyle = "#eee"; ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(canvas.width - PAD_R, y); ctx.stroke();
-
-   ctx.fillText((P_MIN + (i / 5) * (P_MAX - P_MIN)).toFixed(0), 5, y + 4);
-
- }
+  ctx.fillStyle = "#666";
 
 
 
- ctx.strokeStyle = "#333"; ctx.lineWidth = 1.5;
+  for (let i = 0; i <= 4; i++) {
 
- ctx.beginPath();
+    const x = PAD_L + (i / 4) * W;
 
- ctx.moveTo(PAD_L, PAD_T); ctx.lineTo(PAD_L, canvas.height - PAD_B);
+    ctx.strokeStyle = "#eee"; ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, canvas.height - PAD_B); ctx.stroke();
 
- ctx.lineTo(canvas.width - PAD_R, canvas.height - PAD_B);
+    ctx.fillText((V_MIN + (i / 4) * (V_MAX - V_MIN)).toFixed(1), x - 8, canvas.height - 10);
 
- ctx.stroke();
+  }
+
+  for (let i = 0; i <= 5; i++) {
+
+    const y = PAD_T + H - (i / 5) * H;
+
+    ctx.strokeStyle = "#eee"; ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(canvas.width - PAD_R, y); ctx.stroke();
+
+    ctx.fillText((P_MIN + (i / 5) * (P_MAX - P_MIN)).toFixed(0), 5, y + 4);
+
+  }
+
+
+
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+
+  ctx.moveTo(PAD_L, PAD_T); ctx.lineTo(PAD_L, canvas.height - PAD_B);
+
+  ctx.lineTo(canvas.width - PAD_R, canvas.height - PAD_B);
+
+  ctx.stroke();
 
 }
 
@@ -358,19 +340,19 @@ function clearCanvas() { drawGrid(); path = []; isPlaying = false; playBtn.inner
 
 function drawHandle(v, p, label) {
 
- const { x, y } = toPixels(v, p);
+  const { x, y } = toPixels(v, p);
 
- ctx.fillStyle = "#44aaff"; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#44aaff"; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
 
- ctx.strokeStyle = "white"; ctx.stroke();
+  ctx.strokeStyle = "white"; ctx.stroke();
 
 
 
- ctx.fillStyle = "#111";
+  ctx.fillStyle = "#111";
 
- ctx.font = "bold 11px sans-serif";
+  ctx.font = "bold 11px sans-serif";
 
- ctx.fillText(label, x + 8, y - 8);
+  ctx.fillText(label, x + 8, y - 8);
 
 }
 
@@ -378,25 +360,25 @@ function drawHandle(v, p, label) {
 
 function addCurve(v1, p1, v2, p2, type) {
 
- const steps = 15;
+  const steps = 15;
 
- const gamma = 1.4;
+  const gamma = 1.4;
 
- for (let i = 0; i <= steps; i++) {
+  for (let i = 0; i <= steps; i++) {
 
-   let v = v1 + (v2 - v1) * (i / steps);
+    let v = v1 + (v2 - v1) * (i / steps);
 
-   let p;
+    let p;
 
-   if (type === 'iso') p = (p1 * v1) / v;
+    if (type === 'iso') p = (p1 * v1) / v;
 
-   else if (type === 'adiabat') p = (p1 * Math.pow(v1, gamma)) / Math.pow(v, gamma);
+    else if (type === 'adiabat') p = (p1 * Math.pow(v1, gamma)) / Math.pow(v, gamma);
 
-   else if (type === 'line') p = p1 + (p2 - p1) * (i / steps);
+    else if (type === 'line') p = p1 + (p2 - p1) * (i / steps);
 
-   path.push({ v, p });
+    path.push({ v, p });
 
- }
+  }
 
 }
 
@@ -404,155 +386,155 @@ function addCurve(v1, p1, v2, p2, type) {
 
 function drawCycle() {
 
- drawGrid();
+  drawGrid();
 
- path = [];
+  path = [];
 
 
 
- let v1 = Math.max(2.1, Math.min(7.9, ctrlP1.v));
+  let v1 = Math.max(2.1, Math.min(7.9, ctrlP1.v));
 
- let p1 = Math.max(10, Math.min(145, ctrlP1.p));
+  let p1 = Math.max(10, Math.min(145, ctrlP1.p));
 
- let v3 = Math.max(2.1, Math.min(7.9, ctrlP2.v));
+  let v3 = Math.max(2.1, Math.min(7.9, ctrlP2.v));
 
- let p3 = Math.max(5, Math.min(140, ctrlP2.p));
+  let p3 = Math.max(5, Math.min(140, ctrlP2.p));
 
 
 
- if (v3 - v1 < 0.5) {
+  if (v3 - v1 < 0.5) {
 
-   if (draggedPoint === 1) v1 = v3 - 0.5;
+    if (draggedPoint === 1) v1 = v3 - 0.5;
 
-   else v3 = v1 + 0.5;
+    else v3 = v1 + 0.5;
 
- }
+  }
 
 
 
- const gamma = 1.4;
+  const gamma = 1.4;
 
 
 
- if (mode === 'carnot') {
+  if (mode === 'carnot') {
 
-   let v2 = Math.pow((p3 * Math.pow(v3, gamma)) / (p1 * v1), 1 / (gamma - 1));
+    let v2 = Math.pow((p3 * Math.pow(v3, gamma)) / (p1 * v1), 1 / (gamma - 1));
 
-   let v4 = Math.pow((p1 * Math.pow(v1, gamma)) / (p3 * v3), 1 / (gamma - 1));
+    let v4 = Math.pow((p1 * Math.pow(v1, gamma)) / (p3 * v3), 1 / (gamma - 1));
 
 
 
-   if (v2 <= v1 + 0.05 || v2 >= v3 - 0.05 || v4 <= v1 + 0.05 || v4 >= v3 - 0.05 || isNaN(v2) || isNaN(v4)) {
+    if (v2 <= v1 + 0.05 || v2 >= v3 - 0.05 || v4 <= v1 + 0.05 || v4 >= v3 - 0.05 || isNaN(v2) || isNaN(v4)) {
 
-     const p3_min = p1 * Math.pow(v1 / v3, gamma) + 1;
+      const p3_min = p1 * Math.pow(v1 / v3, gamma) + 1;
 
-     const p3_max = p1 * v1 / v3 - 1;
+      const p3_max = p1 * v1 / v3 - 1;
 
-     if (p3_min < p3_max) {
+      if (p3_min < p3_max) {
 
-       p3 = Math.max(p3_min, Math.min(p3_max, p3));
+        p3 = Math.max(p3_min, Math.min(p3_max, p3));
 
-       ctrlP2.p = p3;
+        ctrlP2.p = p3;
 
-     }
+      }
 
-     v2 = Math.pow((p3 * Math.pow(v3, gamma)) / (p1 * v1), 1 / (gamma - 1));
+      v2 = Math.pow((p3 * Math.pow(v3, gamma)) / (p1 * v1), 1 / (gamma - 1));
 
-     v4 = Math.pow((p1 * Math.pow(v1, gamma)) / (p3 * v3), 1 / (gamma - 1));
+      v4 = Math.pow((p1 * Math.pow(v1, gamma)) / (p3 * v3), 1 / (gamma - 1));
 
-   }
+    }
 
 
 
-   if (isNaN(v2) || isNaN(v4) || v2 <= v1 || v2 >= v3 || v4 <= v1 || v4 >= v3) {
+    if (isNaN(v2) || isNaN(v4) || v2 <= v1 || v2 >= v3 || v4 <= v1 || v4 >= v3) {
 
-     v2 = v1 + (v3 - v1) * 0.3;
+      v2 = v1 + (v3 - v1) * 0.3;
 
-     v4 = v1 + (v3 - v1) * 0.7;
+      v4 = v1 + (v3 - v1) * 0.7;
 
-   }
+    }
 
 
 
-   const p2 = p1 * v1 / v2;
+    const p2 = p1 * v1 / v2;
 
-   const p4 = p3 * v3 / v4;
+    const p4 = p3 * v3 / v4;
 
 
 
-   addCurve(v1, p1, v2, p2, 'iso');       
+    addCurve(v1, p1, v2, p2, 'iso');       
 
-   addCurve(v2, p2, v3, p3, 'adiabat');   
+    addCurve(v2, p2, v3, p3, 'adiabat');   
 
-   addCurve(v3, p3, v4, p4, 'iso');       
+    addCurve(v3, p3, v4, p4, 'iso');       
 
-   addCurve(v4, p4, v1, p1, 'adiabat');   
+    addCurve(v4, p4, v1, p1, 'adiabat');   
 
- }
+  }
 
- else if (mode === 'diesel') {
+  else if (mode === 'diesel') {
 
-   const p4 = p3;
+    const p4 = p3;
 
-   const p1d = p1 * Math.pow(v1 / v3, gamma);
+    const p1d = p1 * Math.pow(v1 / v3, gamma);
 
-   const v3d = v3 * Math.pow(p3 / p1, 1 / gamma);
+    const v3d = v3 * Math.pow(p3 / p1, 1 / gamma);
 
 
 
-   addCurve(v3, p1d, v1, p1, 'adiabat');
+    addCurve(v3, p1d, v1, p1, 'adiabat');
 
-   addCurve(v1, p1, v3d, p1, 'line');
+    addCurve(v1, p1, v3d, p1, 'line');
 
-   addCurve(v3d, p1, v3, p4, 'adiabat');
+    addCurve(v3d, p1, v3, p4, 'adiabat');
 
-   addCurve(v3, p4, v3, p1d, 'line');
+    addCurve(v3, p4, v3, p1d, 'line');
 
- }
+  }
 
- else if (mode === 'otto') {
+  else if (mode === 'otto') {
 
-   const p1o = p3;
+    const p1o = p3;
 
-   const p2 = p3 * Math.pow(v3 / v1, gamma);
+    const p2 = p3 * Math.pow(v3 / v1, gamma);
 
-   const p3o = p1;
+    const p3o = p1;
 
-   const p4o = p1 * Math.pow(v1 / v3, gamma);
+    const p4o = p1 * Math.pow(v1 / v3, gamma);
 
 
 
-   addCurve(v3, p1o, v1, p2, 'adiabat');
+    addCurve(v3, p1o, v1, p2, 'adiabat');
 
-   addCurve(v1, p2, v1, p3o, 'line');
+    addCurve(v1, p2, v1, p3o, 'line');
 
-   addCurve(v1, p3o, v3, p4o, 'adiabat');
+    addCurve(v1, p3o, v3, p4o, 'adiabat');
 
-   addCurve(v3, p4o, v3, p1o, 'line');
+    addCurve(v3, p4o, v3, p1o, 'line');
 
- }
+  }
 
 
 
- ctx.beginPath();
+  ctx.beginPath();
 
- path.forEach((pt, idx) => {
+  path.forEach((pt, idx) => {
 
-   const { x, y } = toPixels(pt.v, pt.p);
+    const { x, y } = toPixels(pt.v, pt.p);
 
-   if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
 
- });
+  });
 
- ctx.closePath();
+  ctx.closePath();
 
- ctx.strokeStyle = "red"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = "red"; ctx.lineWidth = 2; ctx.stroke();
 
 
 
- drawHandle(v1, p1, "Min");
+  drawHandle(v1, p1, "Min");
 
- drawHandle(v3, p3, "Max");
+  drawHandle(v3, p3, "Max");
 
 }
 
@@ -560,17 +542,17 @@ function drawCycle() {
 
 modeSelect.onchange = () => {
 
- mode = modeSelect.value;
+  mode = modeSelect.value;
 
- clearCanvas();
+  clearCanvas();
 
- if (mode !== 'free') {
+  if (mode !== 'free') {
 
-   draggedPoint = null;
+    draggedPoint = null;
 
-   drawCycle();
+    drawCycle();
 
- }
+  }
 
 };
 
@@ -578,29 +560,29 @@ modeSelect.onchange = () => {
 
 canvas.addEventListener("mousedown", (e) => {
 
- if (isPlaying) return;
+  if (isPlaying) return;
 
- const rect = canvas.getBoundingClientRect();
+  const rect = canvas.getBoundingClientRect();
 
- const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
 
 
 
- if (mode !== 'free') {
+  if (mode !== 'free') {
 
-   const p1Px = toPixels(ctrlP1.v, ctrlP1.p);
+    const p1Px = toPixels(ctrlP1.v, ctrlP1.p);
 
-   const p2Px = toPixels(ctrlP2.v, ctrlP2.p);
+    const p2Px = toPixels(ctrlP2.v, ctrlP2.p);
 
-   if (Math.hypot(x - p1Px.x, y - p1Px.y) < 15) draggedPoint = 1;
+    if (Math.hypot(x - p1Px.x, y - p1Px.y) < 15) draggedPoint = 1;
 
-   else if (Math.hypot(x - p2Px.x, y - p2Px.y) < 15) draggedPoint = 2;
+    else if (Math.hypot(x - p2Px.x, y - p2Px.y) < 15) draggedPoint = 2;
 
- } else {
+  } else {
 
-   isDrawing = true; path = []; clearCanvas(); ctx.beginPath();
+    isDrawing = true; path = []; clearCanvas(); ctx.beginPath();
 
- }
+  }
 
 });
 
@@ -608,37 +590,37 @@ canvas.addEventListener("mousedown", (e) => {
 
 canvas.addEventListener("mousemove", (e) => {
 
- if (isPlaying) return;
+  if (isPlaying) return;
 
- const rect = canvas.getBoundingClientRect();
+  const rect = canvas.getBoundingClientRect();
 
- const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
 
 
 
- if (mode !== 'free' && draggedPoint) {
+  if (mode !== 'free' && draggedPoint) {
 
-   let { v, p } = fromPixels(x, y);
+    let { v, p } = fromPixels(x, y);
 
-   if (draggedPoint === 1) ctrlP1 = { v: Math.max(2, Math.min(v, ctrlP2.v - 0.5)), p };
+    if (draggedPoint === 1) ctrlP1 = { v: Math.max(2, Math.min(v, ctrlP2.v - 0.5)), p };
 
-   else ctrlP2 = { v: Math.max(ctrlP1.v + 0.5, Math.min(v, 8)), p };
+    else ctrlP2 = { v: Math.max(ctrlP1.v + 0.5, Math.min(v, 8)), p };
 
-   drawCycle();
+    drawCycle();
 
- } else if (mode === 'free' && isDrawing) {
+  } else if (mode === 'free' && isDrawing) {
 
-   if (x >= PAD_L && x <= canvas.width - PAD_R && y >= PAD_T && y <= canvas.height - PAD_B) {
+    if (x >= PAD_L && x <= canvas.width - PAD_R && y >= PAD_T && y <= canvas.height - PAD_B) {
 
-     ctx.lineTo(x, y); ctx.strokeStyle = "red"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.lineTo(x, y); ctx.strokeStyle = "red"; ctx.lineWidth = 2; ctx.stroke();
 
-     const { v, p } = fromPixels(x, y);
+      const { v, p } = fromPixels(x, y);
 
-     path.push({ v, p: Math.max(0.1, p) });
+      path.push({ v, p: Math.max(0.1, p) });
 
-   }
+    }
 
- }
+  }
 
 });
 
@@ -646,13 +628,13 @@ canvas.addEventListener("mousemove", (e) => {
 
 canvas.addEventListener("mouseup", () => {
 
- isDrawing = false; draggedPoint = null;
+  isDrawing = false; draggedPoint = null;
 
- if (mode === 'free' && path.length > 5) {
+  if (mode === 'free' && path.length > 5) {
 
-   ctx.lineTo(toPixels(path[0].v, path[0].p).x, toPixels(path[0].v, path[0].p).y); ctx.stroke();
+    ctx.lineTo(toPixels(path[0].v, path[0].p).x, toPixels(path[0].v, path[0].p).y); ctx.stroke();
 
- }
+  }
 
 });
 
@@ -664,13 +646,13 @@ clearBtn.onclick = () => { clearCanvas(); if (mode !== 'free') drawCycle(); };
 
 playBtn.onclick = () => {
 
- if (path.length === 0) return alert("График пуст!");
+  if (path.length === 0) return alert("График пуст!");
 
- isPlaying = !isPlaying;
+  isPlaying = !isPlaying;
 
- playBtn.innerText = isPlaying ? "Стоп" : "Запуск";
+  playBtn.innerText = isPlaying ? "Стоп" : "Запуск";
 
- pathIndex = 0;
+  pathIndex = 0;
 
 };
 
@@ -684,121 +666,119 @@ const clock = new THREE.Clock();
 
 
 
-// ---------------- АНИМАЦИЯ ----------------
-
 function animate() {
 
- requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
 
 
- if (isPlaying && path.length > 0) {
+  if (isPlaying && path.length > 0) {
 
-   const delta = clock.getDelta();
+    const delta = clock.getDelta();
 
-   const speed = +speedSlider.value;
+    const speed = +speedSlider.value;
 
-   const pointsPerSecond = 20 + speed * 40;
+    const pointsPerSecond = 20 + speed * 40;
 
 
 
-   pathIndex = (pathIndex + pointsPerSecond * delta) % path.length;
+    pathIndex = (pathIndex + pointsPerSecond * delta) % path.length;
 
 
 
-   const idx1 = Math.floor(pathIndex);
+    const idx1 = Math.floor(pathIndex);
 
-   const idx2 = (idx1 + 1) % path.length;
+    const idx2 = (idx1 + 1) % path.length;
 
 
 
-   const t = pathIndex - idx1;
+    const t = pathIndex - idx1;
 
 
 
-   const p1 = path[idx1];
+    const p1 = path[idx1];
 
-   const p2 = path[idx2];
+    const p2 = path[idx2];
 
 
 
-   const vInterp = THREE.MathUtils.lerp(p1.v, p2.v, t);
+    const vInterp = THREE.MathUtils.lerp(p1.v, p2.v, t);
 
-   const pInterp = THREE.MathUtils.lerp(p1.p, p2.p, t);
+    const pInterp = THREE.MathUtils.lerp(p1.p, p2.p, t);
 
 
 
-   V = Math.max(2, Math.min(8, vInterp));
+    V = Math.max(2, Math.min(8, vInterp));
 
-   T = (pInterp * V) / n;
+    T = (pInterp * V) / n;
 
 
 
-   vSlider.value = V;
+    vSlider.value = V;
 
-   tSlider.value = T;
+    tSlider.value = T;
 
 
 
-   updateUI();
+    updateUI();
 
-   updateMechanism();
+    updateMechanism();
 
- }
+  }
 
 
 
- const y = piston ? piston.position.y : 8;
+  const y = piston ? piston.position.y : 8;
 
- const P = (n * T) / (TOP_Y - y);
+  const P = (n * T) / (TOP_Y - y);
 
 
 
- pSlider.value = P; pVal.innerText = P.toFixed(0);
+  pSlider.value = P; pVal.innerText = P.toFixed(0);
 
 
 
- for (const p of particles) {
+  for (const p of particles) {
 
-   const v = p.userData.v;
+    const v = p.userData.v;
 
-   const speed = 0.01 * T;
+    const speed = 0.01 * T;
 
-   v.normalize().multiplyScalar(speed);
+    v.normalize().multiplyScalar(speed);
 
-   p.position.add(v);
+    p.position.add(v);
 
 
 
-   const dx = p.position.x, dz = p.position.z;
+    const dx = p.position.x, dz = p.position.z;
 
-   const dist = Math.sqrt(dx * dx + dz * dz);
+    const dist = Math.sqrt(dx * dx + dz * dz);
 
-   if (dist > cylinderRadius) {
+    if (dist > cylinderRadius) {
 
-     const nx = dx / dist, nz = dz / dist;
+      const nx = dx / dist, nz = dz / dist;
 
-     const dot = v.x * nx + v.z * nz;
+      const dot = v.x * nx + v.z * nz;
 
-     v.x -= 2 * dot * nx; v.z -= 2 * dot * nz;
+      v.x -= 2 * dot * nx; v.z -= 2 * dot * nz;
 
-     p.position.x = nx * cylinderRadius; p.position.z = nz * cylinderRadius;
+      p.position.x = nx * cylinderRadius; p.position.z = nz * cylinderRadius;
 
-   }
+    }
 
 
 
-   const collisionY = (piston?.position.y ?? 8) + PISTON_COLLISION_OFFSET;
+    const collisionY = (piston?.position.y ?? 8) + PISTON_COLLISION_OFFSET;
 
-   if (p.position.y < collisionY) { p.position.y = collisionY; v.y *= -1; }
+    if (p.position.y < collisionY) { p.position.y = collisionY; v.y *= -1; }
 
-   if (p.position.y > TOP_Y) { p.position.y = TOP_Y; v.y *= -1; }
+    if (p.position.y > TOP_Y) { p.position.y = TOP_Y; v.y *= -1; }
 
- }
+  }
 
 
 
- renderer.render(scene, camera);
+  renderer.render(scene, camera);
 
 }
 
@@ -810,10 +790,10 @@ animate();
 
 window.addEventListener("resize", () => {
 
- camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = window.innerWidth / window.innerHeight;
 
- camera.updateProjectionMatrix();
+  camera.updateProjectionMatrix();
 
- renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
 });
